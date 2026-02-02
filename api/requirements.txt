@@ -1,0 +1,21 @@
+# Aethel API Requirements
+# Backend API for Aethel-Studio
+
+# Web Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+
+# CORS
+python-multipart==0.0.6
+
+# Aethel Core Dependencies
+lark==1.1.8
+z3-solver==4.12.4.0
+
+# AI Providers (optional)
+anthropic==0.7.1
+openai==1.3.5
+
+# Utilities
+python-dotenv==1.0.0
