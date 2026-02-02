@@ -51,7 +51,9 @@ export async function getExamples(): Promise<Example[]> {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    return await response.json();
+    const data = await response.json();
+    // API returns { success: true, examples: [...], count: 3 }
+    return data.examples || [];
   } catch (error) {
     console.error('Failed to fetch examples:', error);
     return [];
