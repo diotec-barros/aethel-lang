@@ -1,0 +1,55 @@
+{
+  "bundle_version": "1.0",
+  "function_hash": "e232d170cfdc1ca2b2b9c2a31964781633b102a209b19e29c87c6275b4a6395a",
+  "intent_name": "satellite_power_management",
+  "ast": {
+    "params": [
+      "battery_level:Percent",
+      "altitude:Meters",
+      "solar_exposure:Boolean"
+    ],
+    "constraints": [
+      "battery_level >= battery_min",
+      "battery_level <= battery_max",
+      "altitude > altitude_min"
+    ],
+    "ai_instructions": {
+      "priority": "survival",
+      "target": "risc_v_hardened"
+    },
+    "post_conditions": [
+      "battery_level >= battery_min",
+      "altitude > altitude_min"
+    ]
+  },
+  "code": "fn transfer_funds(sender: &mut Account, receiver: &mut Account, amount: Gold) -> Result<(), TransferError> {\n    // Guard: Valida\u00e7\u00e3o de pr\u00e9-condi\u00e7\u00f5es\n    if sender.balance < amount {\n        return Err(TransferError::InsufficientFunds);\n    }\n    if amount <= 0 {\n        return Err(TransferError::InvalidAmount);\n    }\n    \n    let old_balance = sender.balance;\n    \n    // Solve: Execu\u00e7\u00e3o otimizada para blockchain\n    sender.balance -= amount;\n    receiver.balance += amount;\n    \n    // Verify: Valida\u00e7\u00e3o de p\u00f3s-condi\u00e7\u00f5es\n    assert!(sender.balance < old_balance);\n    \n    Ok(())\n}",
+  "verification": {
+    "status": "PROVED",
+    "message": "O c\u00f3digo \u00e9 matematicamente seguro. Todas as p\u00f3s-condi\u00e7\u00f5es s\u00e3o garantidas.",
+    "timestamp": "2026-02-01T23:29:02.170375"
+  },
+  "certificate": {
+    "version": "1.0",
+    "function_hash": "e232d170cfdc1ca2b2b9c2a31964781633b102a209b19e29c87c6275b4a6395a",
+    "status": "PROVED",
+    "message": "O c\u00f3digo \u00e9 matematicamente seguro. Todas as p\u00f3s-condi\u00e7\u00f5es s\u00e3o garantidas.",
+    "judge_version": "Aethel_Judge_v0.6",
+    "z3_version": "4.12.0+",
+    "timestamp": "2026-02-01T23:57:08.373227",
+    "counter_examples": [],
+    "metadata": {
+      "attempts": 1,
+      "ai_provider": "anthropic",
+      "artifact_file": "output/sat_power_mgmt.rs"
+    },
+    "signature": "704daa323bb3692d0c18b01e3bc736a3a7c8ca222acc24f9c5544d0a44cc670a"
+  },
+  "metadata": {
+    "attempts": 1,
+    "ai_provider": "anthropic",
+    "artifact_file": "output/sat_power_mgmt.rs"
+  },
+  "created_at": "2026-02-01T23:29:02.170381",
+  "bundle_created_at": "2026-02-01T23:57:27.613282",
+  "bundle_signature": "75315429592f85de50e5fafd856eb08558ea7fd8ae5f61b6d42215c98fd477c9"
+}

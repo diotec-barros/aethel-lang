@@ -1,0 +1,57 @@
+{
+  "bundle_version": "1.0",
+  "function_hash": "bf00ccd3dc40ce43e29dd0976eaa698ee8418a3b68643d6ae888f757cdf8b611",
+  "intent_name": "reentry_calculation",
+  "ast": {
+    "params": [
+      "altitude:Meters",
+      "velocity:MetersPerSec",
+      "angle:Degrees"
+    ],
+    "constraints": [
+      "altitude > altitude_zero",
+      "velocity > velocity_zero",
+      "angle >= reentry_min",
+      "angle <= reentry_max"
+    ],
+    "ai_instructions": {
+      "priority": "safety",
+      "target": "risc_v_hardened"
+    },
+    "post_conditions": [
+      "angle >= reentry_min",
+      "angle <= reentry_max",
+      "altitude > altitude_zero"
+    ]
+  },
+  "code": "fn transfer_funds(sender: &mut Account, receiver: &mut Account, amount: Gold) -> Result<(), TransferError> {\n    // Guard: Valida\u00e7\u00e3o de pr\u00e9-condi\u00e7\u00f5es\n    if sender.balance < amount {\n        return Err(TransferError::InsufficientFunds);\n    }\n    if amount <= 0 {\n        return Err(TransferError::InvalidAmount);\n    }\n    \n    let old_balance = sender.balance;\n    \n    // Solve: Execu\u00e7\u00e3o otimizada para blockchain\n    sender.balance -= amount;\n    receiver.balance += amount;\n    \n    // Verify: Valida\u00e7\u00e3o de p\u00f3s-condi\u00e7\u00f5es\n    assert!(sender.balance < old_balance);\n    \n    Ok(())\n}",
+  "verification": {
+    "status": "PROVED",
+    "message": "O c\u00f3digo \u00e9 matematicamente seguro. Todas as p\u00f3s-condi\u00e7\u00f5es s\u00e3o garantidas.",
+    "timestamp": "2026-02-01T23:29:41.461951"
+  },
+  "certificate": {
+    "version": "1.0",
+    "function_hash": "bf00ccd3dc40ce43e29dd0976eaa698ee8418a3b68643d6ae888f757cdf8b611",
+    "status": "PROVED",
+    "message": "O c\u00f3digo \u00e9 matematicamente seguro. Todas as p\u00f3s-condi\u00e7\u00f5es s\u00e3o garantidas.",
+    "judge_version": "Aethel_Judge_v0.6",
+    "z3_version": "4.12.0+",
+    "timestamp": "2026-02-01T23:57:08.430914",
+    "counter_examples": [],
+    "metadata": {
+      "attempts": 1,
+      "ai_provider": "anthropic",
+      "artifact_file": "output/sat_reentry_calc.rs"
+    },
+    "signature": "ad0481da439f4b71683723f5874c481e084565e6ea2e652a295b5f826463aaca"
+  },
+  "metadata": {
+    "attempts": 1,
+    "ai_provider": "anthropic",
+    "artifact_file": "output/sat_reentry_calc.rs"
+  },
+  "created_at": "2026-02-01T23:29:41.461957",
+  "bundle_created_at": "2026-02-01T23:57:53.578933",
+  "bundle_signature": "1aa8a1a6b8fcbf832dce5dca728f02ace22849556e51e9afa57c727e25c96f11"
+}

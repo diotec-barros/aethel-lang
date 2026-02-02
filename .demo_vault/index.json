@@ -1,0 +1,9 @@
+{
+  "9ad9e80d616d938a7bb8527f66f8c9a94796ea6e6d6d6c4cab9e564747042f1d": {
+    "intent_name": "check_balance",
+    "logic_hash": "3cffc9c9580f31066c0f346b88b0d7983dff89b804a92e641e293d63ed6a518e",
+    "created_at": "2026-02-01T23:56:28.492202",
+    "status": "MATHEMATICALLY_PROVED",
+    "imported": true
+  }
+}

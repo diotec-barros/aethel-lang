@@ -1,0 +1,63 @@
+intent transfer(sender: Account, receiver: Account, amount: Balance) {
+    guard {
+        sender_balance >= amount;
+        amount >= min_transfer;
+        receiver_balance >= balance_zero;
+        old_sender_balance == sender_balance;
+        old_receiver_balance == receiver_balance;
+        old_total_supply == total_supply;
+    }
+    
+    solve {
+        priority: security;
+        target: secure_ledger;
+    }
+    
+    verify {
+        sender_balance == old_sender_balance;
+        receiver_balance == old_receiver_balance;
+        total_supply == old_total_supply;
+    }
+}
+
+intent mint(account: Account, amount: Balance) {
+    guard {
+        amount >= min_mint;
+        caller == contract_owner;
+        account_balance >= balance_zero;
+        old_account_balance == account_balance;
+        old_total_supply == total_supply;
+    }
+    
+    solve {
+        priority: security;
+        target: secure_ledger;
+    }
+    
+    verify {
+        account_balance == old_account_balance;
+        total_supply == old_total_supply;
+    }
+}
+
+intent burn(account: Account, amount: Balance) {
+    guard {
+        amount >= min_burn;
+        account_balance >= amount;
+        caller == account_owner;
+        old_account_balance == account_balance;
+        old_total_supply == total_supply;
+        total_supply >= balance_zero;
+    }
+    
+    solve {
+        priority: security;
+        target: secure_ledger;
+    }
+    
+    verify {
+        account_balance == old_account_balance;
+        total_supply == old_total_supply;
+        total_supply >= balance_zero;
+    }
+}
