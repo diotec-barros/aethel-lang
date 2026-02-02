@@ -36,8 +36,8 @@ app.add_middleware(
 
 # Initialize Aethel components
 parser = AethelParser()
-judge = AethelJudge()
 vault = AethelVault()
+# Judge will be initialized per-request with the parsed intent_map
 
 # Request/Response models
 class VerifyRequest(BaseModel):
@@ -111,20 +111,39 @@ async def verify_code(request: VerifyRequest):
         # Extract intents
         intents = parser.extract_intents(ast)
         
+        # Create intent map for Judge
+        intent_map = {}
+        for intent in intents:
+            intent_name = intent.get("name", "unknown")
+            intent_map[intent_name] = {
+                "constraints": intent.get("guards", []),
+                "post_conditions": intent.get("verifications", [])
+            }
+        
+        # Initialize Judge with intent map
+        judge = AethelJudge(intent_map)
+        
         # Verify each intent
         results = []
         all_proved = True
         
-        for intent in intents:
-            result = judge.verify_intent(intent)
-            results.append({
-                "name": intent.get("name", "unknown"),
-                "status": result["status"],
-                "message": result["message"],
-                "counter_examples": result.get("counter_examples", [])
-            })
-            
-            if result["status"] != "PROVED":
+        for intent_name in intent_map.keys():
+            try:
+                result = judge.verify_logic(intent_name)
+                results.append({
+                    "name": intent_name,
+                    "status": "PROVED" if result else "FAILED",
+                    "message": f"Intent '{intent_name}' verification {'passed' if result else 'failed'}"
+                })
+                
+                if not result:
+                    all_proved = False
+            except Exception as e:
+                results.append({
+                    "name": intent_name,
+                    "status": "ERROR",
+                    "message": str(e)
+                })
                 all_proved = False
         
         return VerifyResponse(
