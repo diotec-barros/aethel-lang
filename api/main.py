@@ -97,10 +97,10 @@ async def verify_code(request: VerifyRequest):
     Verify Aethel code using the Judge (Z3 Solver)
     """
     try:
-        # Parse code
-        ast = parser.parse(request.code)
+        # Parse code - returns intent_map directly
+        intent_map = parser.parse(request.code)
         
-        if not ast:
+        if not intent_map:
             return VerifyResponse(
                 success=False,
                 status="PARSE_ERROR",
@@ -108,18 +108,6 @@ async def verify_code(request: VerifyRequest):
                 intents=[],
                 errors=["Invalid syntax"]
             )
-        
-        # Extract intents
-        intents = parser.extract_intents(ast)
-        
-        # Create intent map for Judge
-        intent_map = {}
-        for intent in intents:
-            intent_name = intent.get("name", "unknown")
-            intent_map[intent_name] = {
-                "constraints": intent.get("guards", []),
-                "post_conditions": intent.get("verifications", [])
-            }
         
         # Initialize Judge with intent map
         judge = AethelJudge(intent_map)
@@ -351,23 +339,27 @@ async def mirror_manifest(request: VerifyRequest):
         from aethel.core.ghost import get_ghost_runner
         
         # First, verify the code with Ghost-Runner
-        ast = parser.parse(request.code)
-        if not ast:
+        intent_map = parser.parse(request.code)
+        if not intent_map:
             return {
                 "success": False,
                 "message": "Failed to parse code"
             }
         
-        intents = parser.extract_intents(ast)
-        if not intents:
+        # Get first intent from the map
+        if not intent_map:
             return {
                 "success": False,
                 "message": "No intent found"
             }
         
+        # Get first intent
+        first_intent_name = list(intent_map.keys())[0]
+        first_intent = intent_map[first_intent_name]
+        
         # Predict with Ghost-Runner
         ghost = get_ghost_runner()
-        prediction = ghost.predict_outcome(intents[0])
+        prediction = ghost.predict_outcome(first_intent)
         
         # Only manifest if PROVED
         if prediction.status != "MANIFESTED":
@@ -457,30 +449,33 @@ async def ghost_predict(request: VerifyRequest):
     try:
         from aethel.core.ghost import get_ghost_runner
         
-        # Parse code
-        ast = parser.parse(request.code)
+        # Parse code - returns intent_map directly
+        intent_map = parser.parse(request.code)
         
-        if not ast:
+        if not intent_map:
             return {
                 "success": False,
                 "status": "PARSE_ERROR",
                 "message": "Failed to parse code"
             }
         
-        # Extract first intent
-        intents = parser.extract_intents(ast)
-        if not intents:
+        # Get first intent from the map
+        if not intent_map:
             return {
                 "success": False,
                 "status": "NO_INTENT",
                 "message": "No intent found in code"
             }
         
+        # Get first intent
+        first_intent_name = list(intent_map.keys())[0]
+        first_intent = intent_map[first_intent_name]
+        
         # Get Ghost-Runner
         ghost = get_ghost_runner()
         
         # Predict outcome (zero latency!)
-        prediction = ghost.predict_outcome(intents[0])
+        prediction = ghost.predict_outcome(first_intent)
         
         return {
             "success": prediction.status == "MANIFESTED",
