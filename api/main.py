@@ -112,20 +112,25 @@ async def verify_code(request: VerifyRequest):
         # Initialize Judge with intent map
         judge = AethelJudge(intent_map)
         
-        # Verify each intent
+        # Verify each intent (v1.1.4 - Unified Proof Engine)
         results = []
         all_proved = True
         
         for intent_name in intent_map.keys():
             try:
                 result = judge.verify_logic(intent_name)
+                
+                # result is now a dict with status, message, etc.
+                status = result.get('status', 'ERROR')
+                message = result.get('message', 'Unknown error')
+                
                 results.append({
                     "name": intent_name,
-                    "status": "PROVED" if result else "FAILED",
-                    "message": f"Intent '{intent_name}' verification {'passed' if result else 'failed'}"
+                    "status": status,
+                    "message": message
                 })
                 
-                if not result:
+                if status != 'PROVED':
                     all_proved = False
             except Exception as e:
                 results.append({

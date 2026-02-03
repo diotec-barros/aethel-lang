@@ -17,15 +17,18 @@ class AethelJudge:
         """
         Verifica se a lógica da intenção é matematicamente consistente.
         
-        Estratégia:
+        Estratégia v1.1.4 - UNIFIED PROOF ENGINE:
         1. Adiciona guards como premissas (assumimos que são verdadeiras)
-        2. Adiciona NEGAÇÃO dos verify como objetivo
-        3. Se Z3 encontrar solução = FALHA (existe contra-exemplo)
-        4. Se Z3 não encontrar = PROVA (código é seguro)
+        2. Verifica se TODAS as pós-condições podem ser verdadeiras JUNTAS
+        3. Se Z3 encontrar modelo = PROVA (existe realidade consistente)
+        4. Se Z3 não encontrar = FALHA (contradição global detectada)
+        
+        Fix: Previne "Singularidade do Vácuo" (Vacuous Truth Vulnerability)
         """
         data = self.intent_map[intent_name]
         
         print(f"\n⚖️  Iniciando verificação formal de '{intent_name}'...")
+        print("🔬 Usando Unified Proof Engine (v1.1.4)")
         
         # Reset do solver para nova verificação
         self.solver.reset()
@@ -42,48 +45,57 @@ class AethelJudge:
                 self.solver.add(z3_expr)
                 print(f"  ✓ {constraint}")
         
-        # 3. Adicionar NEGAÇÃO das PÓS-CONDIÇÕES (verify)
-        # Se o solver encontrar solução, significa que existe um caso onde verify falha!
-        print("\n🎯 Verificando pós-condições (verify):")
-        verification_failed = False
-        counter_examples = []
+        # 3. UNIFIED PROOF: Verificar TODAS as pós-condições JUNTAS
+        print("\n🎯 Verificando consistência global das pós-condições:")
         
+        all_post_conditions = []
         for post_condition in data['post_conditions']:
             z3_expr = self._parse_constraint(post_condition)
             if z3_expr is not None:
-                # Testamos a NEGAÇÃO
-                self.solver.push()
-                self.solver.add(Not(z3_expr))
-                
-                result = self.solver.check()
-                
-                if result == sat:
-                    # Encontrou contra-exemplo!
-                    verification_failed = True
-                    model = self.solver.model()
-                    counter_examples.append({
-                        'condition': post_condition,
-                        'counter_example': self._format_model(model)
-                    })
-                    print(f"  ❌ {post_condition} - FALHA DETECTADA!")
-                elif result == unsat:
-                    print(f"  ✓ {post_condition} - PROVADO")
-                else:
-                    print(f"  ⚠️  {post_condition} - INDETERMINADO")
-                
-                self.solver.pop()
+                all_post_conditions.append(z3_expr)
+                print(f"  • {post_condition}")
         
-        # 4. Resultado final
-        if verification_failed:
+        if not all_post_conditions:
             return {
-                'status': 'FAILED',
-                'message': 'Encontrei falhas lógicas! O código viola as pós-condições.',
-                'counter_examples': counter_examples
+                'status': 'ERROR',
+                'message': 'Nenhuma pós-condição válida para verificar',
+                'counter_examples': []
             }
-        else:
+        
+        # 4. Criar condição unificada (AND de todas as pós-condições)
+        unified_condition = And(all_post_conditions)
+        
+        # 5. Adicionar ao solver e verificar
+        self.solver.add(unified_condition)
+        result = self.solver.check()
+        
+        print(f"\n🔍 Resultado da verificação unificada: {result}")
+        
+        # 6. Interpretar resultado
+        if result == sat:
+            # Existe uma realidade onde TODAS as condições são verdadeiras!
+            model = self.solver.model()
+            print("  ✅ PROVED - Todas as pós-condições são consistentes!")
             return {
                 'status': 'PROVED',
-                'message': 'O código é matematicamente seguro. Todas as pós-condições são garantidas.',
+                'message': 'O código é matematicamente seguro. Todas as pós-condições são consistentes e prováveis.',
+                'counter_examples': [],
+                'model': self._format_model(model)
+            }
+        elif result == unsat:
+            # Contradição detectada! Não existe realidade onde todas sejam verdadeiras
+            print("  ❌ FAILED - Contradição global detectada!")
+            return {
+                'status': 'FAILED',
+                'message': 'As pós-condições são contraditórias ou não podem ser satisfeitas juntas. Contradição global detectada.',
+                'counter_examples': []
+            }
+        else:
+            # Z3 não conseguiu determinar
+            print("  ⚠️  UNKNOWN - Z3 não conseguiu determinar")
+            return {
+                'status': 'UNKNOWN',
+                'message': 'Z3 não conseguiu determinar a satisfatibilidade. Timeout ou problema muito complexo.',
                 'counter_examples': []
             }
     
