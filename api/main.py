@@ -338,6 +338,89 @@ async def get_examples():
         "count": len(examples)
     }
 
+# Ghost-Runner endpoints (Epoch 3)
+@app.post("/api/ghost/predict")
+async def ghost_predict(request: VerifyRequest):
+    """
+    Ghost-Runner: Predicts outcome before execution.
+    Manifests truth by subtracting the impossible.
+    """
+    try:
+        from aethel.core.ghost import get_ghost_runner
+        
+        # Parse code
+        ast = parser.parse(request.code)
+        
+        if not ast:
+            return {
+                "success": False,
+                "status": "PARSE_ERROR",
+                "message": "Failed to parse code"
+            }
+        
+        # Extract first intent
+        intents = parser.extract_intents(ast)
+        if not intents:
+            return {
+                "success": False,
+                "status": "NO_INTENT",
+                "message": "No intent found in code"
+            }
+        
+        # Get Ghost-Runner
+        ghost = get_ghost_runner()
+        
+        # Predict outcome (zero latency!)
+        prediction = ghost.predict_outcome(intents[0])
+        
+        return {
+            "success": prediction.status == "MANIFESTED",
+            "status": prediction.status,
+            "confidence": prediction.confidence,
+            "latency": prediction.latency,
+            "eliminated_states": prediction.eliminated_states,
+            "message": prediction.message,
+            "result": {
+                "variables": prediction.result.variables if prediction.result else None,
+                "merkle_root": prediction.result.merkle_root if prediction.result else None
+            } if prediction.result else None
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "status": "ERROR",
+            "message": str(e)
+        }
+
+@app.post("/api/ghost/can-type")
+async def ghost_can_type(request: dict):
+    """
+    Ghost-Runner: Checks if next character is possible.
+    Prevents typing impossible code (cursor lock).
+    """
+    try:
+        from aethel.core.ghost import get_ghost_runner
+        
+        current_code = request.get("code", "")
+        next_char = request.get("nextChar", "")
+        
+        ghost = get_ghost_runner()
+        can_type = ghost.can_type_next_char(current_code, next_char)
+        
+        return {
+            "success": True,
+            "canType": can_type,
+            "message": "Character allowed" if can_type else "Character would lead to impossible state"
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "canType": True,  # Fail open
+            "message": str(e)
+        }
+
 # Run with: uvicorn api.main:app --reload
 if __name__ == "__main__":
     import uvicorn
