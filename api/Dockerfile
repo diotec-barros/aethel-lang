@@ -27,5 +27,5 @@ RUN mkdir -p .aethel_vault/bundles .aethel_vault/certificates
 # Expose port (Railway will override with $PORT)
 EXPOSE 8000
 
-# Simple, direct command
-CMD python -m uvicorn api.main:app --host 0.0.0.0 --port ${PORT:-8000}
+# Use Python script that reads PORT correctly
+CMD ["python", "api/run.py"]
