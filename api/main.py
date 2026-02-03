@@ -138,7 +138,7 @@ async def verify_code(request: VerifyRequest):
         return VerifyResponse(
             success=all_proved,
             status="PROVED" if all_proved else "FAILED",
-            message=f"Verified {len(intents)} intent(s)",
+            message=f"Verified {len(intent_map)} intent(s)",
             intents=results
         )
         
