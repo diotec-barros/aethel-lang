@@ -2,12 +2,18 @@ from z3 import *
 import re
 import ast  # v1.2: Para parsing de expressões aritméticas
 from .conservation import ConservationChecker  # v1.3: Conservation Checker
+from .overflow import OverflowSentinel  # v1.4: Overflow Sentinel
 
 
 class AethelJudge:
     """
     O Juiz - Verificador Matemático que garante correção formal do código gerado.
     Usa Z3 Solver para provar que o código respeita as constraints.
+    
+    v1.4: Defesa em 3 Camadas:
+    - Layer 1: Conservation Guardian (Σ = 0)
+    - Layer 2: Overflow Sentinel (limites de hardware)
+    - Layer 3: Z3 Theorem Prover (lógica profunda)
     """
     
     def __init__(self, intent_map):
@@ -15,13 +21,15 @@ class AethelJudge:
         self.solver = Solver()
         self.variables = {}
         self.conservation_checker = ConservationChecker()  # v1.3: Initialize Conservation Checker
+        self.overflow_sentinel = OverflowSentinel()  # v1.4: Initialize Overflow Sentinel
     
     def verify_logic(self, intent_name):
         """
         Verifica se a lógica da intenção é matematicamente consistente.
         
-        Estratégia v1.3 - CONSERVATION-AWARE VERIFICATION:
-        0. [NEW] Verifica conservação de fundos (fast pre-check)
+        Estratégia v1.4 - TRIPLE-LAYER DEFENSE:
+        0. [v1.3] Verifica conservação de fundos (fast pre-check, O(n))
+        0.5 [v1.4] Verifica limites de hardware (overflow/underflow, O(n))
         1. Adiciona guards como premissas (assumimos que são verdadeiras)
         2. Verifica se TODAS as pós-condições podem ser verdadeiras JUNTAS
         3. Se Z3 encontrar modelo = PROVA (existe realidade consistente)
@@ -29,11 +37,20 @@ class AethelJudge:
         
         Fix v1.1.4: Previne "Singularidade do Vácuo" (Vacuous Truth Vulnerability)
         New v1.3: Detecta violações de conservação antes de chamar Z3
+        New v1.4: Detecta overflow/underflow antes de chamar Z3
+        
+        Defesa em 3 Camadas:
+        - Layer 1: Conservation Guardian (Σ = 0) - Protege contra criação de fundos
+        - Layer 2: Overflow Sentinel (limites) - Protege contra bugs de hardware
+        - Layer 3: Z3 Theorem Prover (lógica) - Protege contra contradições lógicas
         """
         data = self.intent_map[intent_name]
         
         print(f"\n⚖️  Iniciando verificação formal de '{intent_name}'...")
-        print("🔬 Usando Conservation-Aware Verification (v1.3)")
+        print("🛡️  Usando Triple-Layer Defense (v1.4)")
+        print("    Layer 1: Conservation Guardian")
+        print("    Layer 2: Overflow Sentinel")
+        print("    Layer 3: Z3 Theorem Prover")
         
         # STEP 0: Conservation Check (v1.3 - Fast Pre-Check)
         print("\n💰 [CONSERVATION GUARDIAN] Verificando Lei da Conservação...")
@@ -60,6 +77,31 @@ class AethelJudge:
             print(f"  ✅ Conservação válida ({len(conservation_result.changes)} mudanças de saldo detectadas)")
         else:
             print("  ℹ️  Nenhuma mudança de saldo detectada (pulando verificação de conservação)")
+        
+        # STEP 0.5: Overflow Check (v1.4 - Hardware Safety Check)
+        print("\n🔢 [OVERFLOW SENTINEL] Verificando limites de hardware...")
+        overflow_result = self.overflow_sentinel.check_intent({
+            'verify': data['post_conditions']
+        })
+        
+        if not overflow_result.is_safe:
+            print("  🚨 OVERFLOW/UNDERFLOW DETECTADO!")
+            for violation in overflow_result.violations:
+                print(f"  ⚠️  {violation['type']}: {violation['operation']}")
+            return {
+                'status': 'FAILED',
+                'message': f'🔢 OVERFLOW/UNDERFLOW DETECTED - {overflow_result.format_error()}',
+                'counter_examples': [],
+                'overflow_violation': {
+                    'violations': overflow_result.violations,
+                    'limits': {
+                        'MAX_INT': self.overflow_sentinel.max_int,
+                        'MIN_INT': self.overflow_sentinel.min_int
+                    }
+                }
+            }
+        
+        print(f"  ✅ Todas as operações estão dentro dos limites de hardware")
         
         # Reset do solver para nova verificação
         self.solver.reset()
