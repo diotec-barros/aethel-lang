@@ -1,6 +1,7 @@
 from z3 import *
 import re
 import ast  # v1.2: Para parsing de expressões aritméticas
+from .conservation import ConservationChecker  # v1.3: Conservation Checker
 
 
 class AethelJudge:
@@ -13,23 +14,45 @@ class AethelJudge:
         self.intent_map = intent_map
         self.solver = Solver()
         self.variables = {}
+        self.conservation_checker = ConservationChecker()  # v1.3: Initialize Conservation Checker
     
     def verify_logic(self, intent_name):
         """
         Verifica se a lógica da intenção é matematicamente consistente.
         
-        Estratégia v1.1.4 - UNIFIED PROOF ENGINE:
+        Estratégia v1.3 - CONSERVATION-AWARE VERIFICATION:
+        0. [NEW] Verifica conservação de fundos (fast pre-check)
         1. Adiciona guards como premissas (assumimos que são verdadeiras)
         2. Verifica se TODAS as pós-condições podem ser verdadeiras JUNTAS
         3. Se Z3 encontrar modelo = PROVA (existe realidade consistente)
         4. Se Z3 não encontrar = FALHA (contradição global detectada)
         
-        Fix: Previne "Singularidade do Vácuo" (Vacuous Truth Vulnerability)
+        Fix v1.1.4: Previne "Singularidade do Vácuo" (Vacuous Truth Vulnerability)
+        New v1.3: Detecta violações de conservação antes de chamar Z3
         """
         data = self.intent_map[intent_name]
         
         print(f"\n⚖️  Iniciando verificação formal de '{intent_name}'...")
-        print("🔬 Usando Unified Proof Engine (v1.1.4)")
+        print("🔬 Usando Conservation-Aware Verification (v1.3)")
+        
+        # STEP 0: Conservation Check (v1.3 - Fast Pre-Check)
+        print("\n💰 Verificando conservação de fundos...")
+        conservation_result = self.conservation_checker.check_intent({
+            'verify': data['post_conditions']
+        })
+        
+        if not conservation_result.is_valid:
+            print("  ❌ Violação de conservação detectada!")
+            return {
+                'status': 'FAILED',
+                'message': conservation_result.format_error(),
+                'counter_examples': []
+            }
+        
+        if conservation_result.changes:
+            print(f"  ✅ Conservação válida ({len(conservation_result.changes)} mudanças de saldo detectadas)")
+        else:
+            print("  ℹ️  Nenhuma mudança de saldo detectada (pulando verificação de conservação)")
         
         # Reset do solver para nova verificação
         self.solver.reset()
