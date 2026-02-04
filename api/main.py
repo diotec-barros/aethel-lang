@@ -662,13 +662,18 @@ async def oracle_stats():
         registry = get_oracle_registry()
         oracles = registry.list_oracles()
         
+        # Count oracle types by ID patterns (since list_oracles returns strings)
+        price_feeds = len([o for o in oracles if "price" in o.lower() or "btc" in o.lower() or "eth" in o.lower()])
+        weather = len([o for o in oracles if "weather" in o.lower()])
+        custom = len(oracles) - price_feeds - weather
+        
         return {
             "success": True,
             "total_oracles": len(oracles),
             "oracle_types": {
-                "price_feeds": len([o for o in oracles if "price" in o.get("description", "").lower()]),
-                "weather": len([o for o in oracles if "weather" in o.get("description", "").lower()]),
-                "custom": len([o for o in oracles if "custom" in o.get("description", "").lower()])
+                "price_feeds": price_feeds,
+                "weather": weather,
+                "custom": custom
             },
             "version": "1.7.0",
             "philosophy": "Zero trust, pure verification"

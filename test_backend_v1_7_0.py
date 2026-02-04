@@ -63,11 +63,19 @@ def test_oracle_registry():
     oracles = data["oracles"]
     print(f"   Registered Oracles: {data['count']}")
     
-    for oracle in oracles:
-        print(f"   - {oracle['oracle_id']}: {oracle['description']}")
+    # Handle both formats: list of strings or list of dicts
+    if oracles and isinstance(oracles[0], str):
+        # Simple list of IDs
+        for oracle_id in oracles:
+            print(f"   - {oracle_id}")
+        oracle_ids = oracles
+    else:
+        # List of objects
+        for oracle in oracles:
+            print(f"   - {oracle['oracle_id']}: {oracle['description']}")
+        oracle_ids = [o["oracle_id"] for o in oracles]
     
     # Check for default oracles
-    oracle_ids = [o["oracle_id"] for o in oracles]
     assert "chainlink_btc_usd" in oracle_ids, "Chainlink BTC/USD missing"
     assert "chainlink_eth_usd" in oracle_ids, "Chainlink ETH/USD missing"
     
