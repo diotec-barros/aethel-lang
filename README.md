@@ -7,17 +7,17 @@ sdk: docker
 app_port: 7860
 ---
 
-# Aethel v1.4.1 - The Overflow Sentinel (Hotfix)
+# Aethel v1.5.0 - The Fortress
 
 [![Hugging Face Space](https://img.shields.io/badge/🤗%20Hugging%20Face-Space-yellow)](https://huggingface.co/spaces/diotec/aethel-judge)
 [![API Status](https://img.shields.io/badge/API-Online-success)](https://diotec-aethel-judge.hf.space)
-[![Tests](https://img.shields.io/badge/tests-6%2F6%20passing-brightgreen)](https://diotec-aethel-judge.hf.space/health)
+[![Tests](https://img.shields.io/badge/tests-10%2F10%20passing-brightgreen)](https://diotec-aethel-judge.hf.space/health)
 [![Frauds Blocked](https://img.shields.io/badge/frauds%20blocked-2-red)](./SECOND_FRAUD_BLOCKED.md)
-[![Version](https://img.shields.io/badge/version-1.4.1-blue)](./HOTFIX_V1_4_1_OVERFLOW_FIX.md)
+[![Version](https://img.shields.io/badge/version-1.5.0-blue)](./ADVERSARIAL_ANALYSIS_V1_5_FORTRESS.md)
 
-Motor de prova matemática com defesa em 3 camadas para infraestruturas críticas.
+Motor de prova matemática com defesa em 4 camadas para infraestruturas críticas.
 
-> **🚨 HOTFIX v1.4.1**: Critical overflow detection fix! Now checks operation **results**, not just individual values. [Read more →](./HOTFIX_V1_4_1_OVERFLOW_FIX.md)
+> **🛡️ NEW v1.5.0**: The Fortress is here! Input Sanitizer blocks prompt injection + Z3 Timeout prevents DoS attacks. [Read more →](./ADVERSARIAL_ANALYSIS_V1_5_FORTRESS.md)
 
 ## 🌐 Try It Live!
 
@@ -30,20 +30,33 @@ Motor de prova matemática com defesa em 3 camadas para infraestruturas crítica
 
 Aethel é uma linguagem de programação formalmente verificada para sistemas financeiros críticos. Cada linha de código é matematicamente provada antes de ser executada.
 
-## ✨ Features v1.4.1
+## ✨ Features v1.5.0
 
-### 🛡️ Triple-Layer Defense System (v1.4)
+### 🛡️ Fortress Defense System (v1.5) - 4 LAYERS ⭐ NEW
+- **Layer 0**: Input Sanitizer - Protege contra prompt injection ⭐ NEW v1.5.1
 - **Layer 1**: Conservation Guardian - Protege contra criação de fundos
-- **Layer 2**: Overflow Sentinel - Protege contra bugs de hardware ⭐ FIXED v1.4.1
-- **Layer 3**: Z3 Theorem Prover - Protege contra contradições lógicas
+- **Layer 2**: Overflow Sentinel - Protege contra bugs de hardware
+- **Layer 3**: Z3 Theorem Prover - Protege contra contradições lógicas + Timeout ⭐ NEW v1.5.2
 
-### 🔢 Overflow Sentinel (v1.4.1) ⭐ HOTFIX
-- **FIXED**: Now checks operation **results**, not just individual values
+### 🔒 Input Sanitizer (v1.5.1) ⭐ NEW
+- **Anti-Injection**: Bloqueia prompt injection attacks
+- **System Command Block**: Detecta `os.system()`, `eval()`, `exec()`
+- **Pattern Detection**: Identifica "IGNORE PREVIOUS", "BYPASS", "LEAK"
+- **Complexity Limits**: Max 100 variáveis, 500 constraints
+- Performance: O(n) - < 1ms
+- [Read security analysis →](./ADVERSARIAL_ANALYSIS_V1_5_FORTRESS.md)
+
+### ⏱️ Z3 Timeout Protection (v1.5.2) ⭐ NEW
+- **DoS Prevention**: 2-second timeout on Z3 solver
+- **Complexity Checks**: Rejeita problemas muito complexos
+- **Resource Limits**: Protege contra ataques de negação de serviço
+- Performance: Timeout configurável (default: 2000ms)
+
+### 🔢 Overflow Sentinel (v1.4.1)
 - Detecta integer overflow/underflow com precisão matemática
 - Limites: 64-bit signed integers (MAX_INT: 2^63-1)
 - Previne "Bit Apocalypse" (near-MAX_INT operations)
 - Performance: O(n) - < 1ms
-- [Read hotfix details →](./HOTFIX_V1_4_1_OVERFLOW_FIX.md)
 
 ### 🔬 Unified Proof Engine (v1.1.4)
 - Detecção de contradições globais
