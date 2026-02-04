@@ -12,6 +12,9 @@ ENV/
 output/*.rs
 .aethel_vault/*.json
 
+# Hugging Face Space (repositório separado)
+aethel-judge/
+
 # IDE
 .vscode/
 .idea/

@@ -1,8 +1,10 @@
 from z3 import *
 import re
 import ast  # v1.2: Para parsing de expressões aritméticas
+import time  # v1.5: Para medir tempo de execução
 from .conservation import ConservationChecker  # v1.3: Conservation Checker
 from .overflow import OverflowSentinel  # v1.4: Overflow Sentinel
+from .sanitizer import AethelSanitizer  # v1.5: Input Sanitizer
 
 
 class AethelJudge:
@@ -10,24 +12,35 @@ class AethelJudge:
     O Juiz - Verificador Matemático que garante correção formal do código gerado.
     Usa Z3 Solver para provar que o código respeita as constraints.
     
-    v1.4: Defesa em 3 Camadas:
+    v1.5: Defesa em 4 Camadas (The Fortress):
+    - Layer 0: Input Sanitizer (anti-injection) ⭐ NEW v1.5.1
     - Layer 1: Conservation Guardian (Σ = 0)
     - Layer 2: Overflow Sentinel (limites de hardware)
-    - Layer 3: Z3 Theorem Prover (lógica profunda)
+    - Layer 3: Z3 Theorem Prover (lógica profunda) + Timeout ⭐ NEW v1.5.2
     """
+    
+    # v1.5.2: Limites de segurança
+    Z3_TIMEOUT_MS = 2000  # 2 segundos
+    MAX_VARIABLES = 100
+    MAX_CONSTRAINTS = 500
     
     def __init__(self, intent_map):
         self.intent_map = intent_map
         self.solver = Solver()
         self.variables = {}
+        self.sanitizer = AethelSanitizer()  # v1.5.1: Initialize Sanitizer
         self.conservation_checker = ConservationChecker()  # v1.3: Initialize Conservation Checker
         self.overflow_sentinel = OverflowSentinel()  # v1.4: Initialize Overflow Sentinel
+        
+        # v1.5.2: Configurar timeout do Z3
+        self.solver.set("timeout", self.Z3_TIMEOUT_MS)
     
     def verify_logic(self, intent_name):
         """
         Verifica se a lógica da intenção é matematicamente consistente.
         
-        Estratégia v1.4 - TRIPLE-LAYER DEFENSE:
+        Estratégia v1.5 - FORTRESS DEFENSE (4 LAYERS):
+        -1. [v1.5.1] Sanitiza input (anti-injection, O(n))
         0. [v1.3] Verifica conservação de fundos (fast pre-check, O(n))
         0.5 [v1.4] Verifica limites de hardware (overflow/underflow, O(n))
         1. Adiciona guards como premissas (assumimos que são verdadeiras)
@@ -35,11 +48,11 @@ class AethelJudge:
         3. Se Z3 encontrar modelo = PROVA (existe realidade consistente)
         4. Se Z3 não encontrar = FALHA (contradição global detectada)
         
-        Fix v1.1.4: Previne "Singularidade do Vácuo" (Vacuous Truth Vulnerability)
-        New v1.3: Detecta violações de conservação antes de chamar Z3
-        New v1.4: Detecta overflow/underflow antes de chamar Z3
+        New v1.5.1: Sanitização de input (anti-injection)
+        New v1.5.2: Z3 Timeout (anti-DoS)
         
-        Defesa em 3 Camadas:
+        Defesa em 4 Camadas:
+        - Layer 0: Input Sanitizer - Protege contra injeção de código
         - Layer 1: Conservation Guardian (Σ = 0) - Protege contra criação de fundos
         - Layer 2: Overflow Sentinel (limites) - Protege contra bugs de hardware
         - Layer 3: Z3 Theorem Prover (lógica) - Protege contra contradições lógicas
@@ -47,10 +60,55 @@ class AethelJudge:
         data = self.intent_map[intent_name]
         
         print(f"\n⚖️  Iniciando verificação formal de '{intent_name}'...")
-        print("🛡️  Usando Triple-Layer Defense (v1.4)")
+        print("🛡️  Usando Fortress Defense (v1.5)")
+        print("    Layer 0: Input Sanitizer (anti-injection)")
         print("    Layer 1: Conservation Guardian")
         print("    Layer 2: Overflow Sentinel")
-        print("    Layer 3: Z3 Theorem Prover")
+        print("    Layer 3: Z3 Theorem Prover (timeout: 2s)")
+        
+        # STEP -1: Input Sanitization (v1.5.1 - Anti-Injection)
+        print("\n🔒 [INPUT SANITIZER] Verificando segurança do código...")
+        
+        # Sanitizar todas as strings do intent
+        code_to_check = str(data)
+        sanitize_result = self.sanitizer.sanitize(code_to_check)
+        
+        if not sanitize_result.is_safe:
+            print("  🚨 TENTATIVA DE INJEÇÃO DETECTADA!")
+            for violation in sanitize_result.violations:
+                print(f"  ⚠️  {violation['type']}: {violation.get('matched', 'N/A')}")
+            return {
+                'status': 'REJECTED',
+                'message': f'🔒 FORTRESS BLOCK - {sanitize_result.format_error()}',
+                'counter_examples': [],
+                'sanitizer_violations': sanitize_result.violations
+            }
+        
+        print(f"  ✅ Código aprovado pela sanitização")
+        
+        # STEP -0.5: Complexity Check (v1.5.2 - Anti-DoS)
+        print("\n⏱️  [COMPLEXITY CHECK] Verificando complexidade...")
+        
+        num_vars = len(self.variables)
+        num_constraints = len(data['constraints']) + len(data['post_conditions'])
+        
+        if num_vars > self.MAX_VARIABLES:
+            print(f"  🚨 MUITAS VARIÁVEIS: {num_vars} > {self.MAX_VARIABLES}")
+            return {
+                'status': 'REJECTED',
+                'message': f'🛡️ DoS PROTECTION - Muitas variáveis ({num_vars}). Máximo: {self.MAX_VARIABLES}',
+                'counter_examples': []
+            }
+        
+        if num_constraints > self.MAX_CONSTRAINTS:
+            print(f"  🚨 MUITAS CONSTRAINTS: {num_constraints} > {self.MAX_CONSTRAINTS}")
+            return {
+                'status': 'REJECTED',
+                'message': f'🛡️ DoS PROTECTION - Muitas constraints ({num_constraints}). Máximo: {self.MAX_CONSTRAINTS}',
+                'counter_examples': []
+            }
+        
+        print(f"  ✅ Complexidade aceitável (vars: {num_vars}, constraints: {num_constraints})")
         
         # STEP 0: Conservation Check (v1.3 - Fast Pre-Check)
         print("\n💰 [CONSERVATION GUARDIAN] Verificando Lei da Conservação...")
@@ -105,6 +163,7 @@ class AethelJudge:
         
         # Reset do solver para nova verificação
         self.solver.reset()
+        self.solver.set("timeout", self.Z3_TIMEOUT_MS)  # Reconfigurar timeout
         self.variables = {}
         
         # 1. Extrair e criar variáveis simbólicas
@@ -138,11 +197,15 @@ class AethelJudge:
         # 4. Criar condição unificada (AND de todas as pós-condições)
         unified_condition = And(all_post_conditions)
         
-        # 5. Adicionar ao solver e verificar
+        # 5. Adicionar ao solver e verificar COM TIMEOUT
         self.solver.add(unified_condition)
-        result = self.solver.check()
         
-        print(f"\n🔍 Resultado da verificação unificada: {result}")
+        print(f"\n⏱️  Executando Z3 com timeout de {self.Z3_TIMEOUT_MS}ms...")
+        start_time = time.time()
+        result = self.solver.check()
+        elapsed_ms = (time.time() - start_time) * 1000
+        
+        print(f"\n🔍 Resultado da verificação unificada: {result} (tempo: {elapsed_ms:.0f}ms)")
         
         # 6. Interpretar resultado
         if result == sat:
@@ -153,7 +216,8 @@ class AethelJudge:
                 'status': 'PROVED',
                 'message': 'O código é matematicamente seguro. Todas as pós-condições são consistentes e prováveis.',
                 'counter_examples': [],
-                'model': self._format_model(model)
+                'model': self._format_model(model),
+                'elapsed_ms': elapsed_ms
             }
         elif result == unsat:
             # Contradição detectada! Não existe realidade onde todas sejam verdadeiras
@@ -161,15 +225,17 @@ class AethelJudge:
             return {
                 'status': 'FAILED',
                 'message': 'As pós-condições são contraditórias ou não podem ser satisfeitas juntas. Contradição global detectada.',
-                'counter_examples': []
+                'counter_examples': [],
+                'elapsed_ms': elapsed_ms
             }
         else:
-            # Z3 não conseguiu determinar
-            print("  ⚠️  UNKNOWN - Z3 não conseguiu determinar")
+            # Z3 não conseguiu determinar (timeout ou muito complexo)
+            print("  ⚠️  TIMEOUT - Z3 excedeu o limite de tempo (possível ataque DoS)")
             return {
-                'status': 'UNKNOWN',
-                'message': 'Z3 não conseguiu determinar a satisfatibilidade. Timeout ou problema muito complexo.',
-                'counter_examples': []
+                'status': 'TIMEOUT',
+                'message': f'🛡️ DoS PROTECTION - Verificação excedeu {self.Z3_TIMEOUT_MS}ms. Problema muito complexo ou tentativa de ataque.',
+                'counter_examples': [],
+                'elapsed_ms': elapsed_ms
             }
     
     def _extract_variables(self, constraints):
