@@ -5,12 +5,18 @@ import time  # v1.5: Para medir tempo de execução
 from .conservation import ConservationChecker  # v1.3: Conservation Checker
 from .overflow import OverflowSentinel  # v1.4: Overflow Sentinel
 from .sanitizer import AethelSanitizer  # v1.5: Input Sanitizer
+from .zkp_simulator import get_zkp_simulator  # v1.6.2: Zero-Knowledge Proofs
 
 
 class AethelJudge:
     """
     O Juiz - Verificador Matemático que garante correção formal do código gerado.
     Usa Z3 Solver para provar que o código respeita as constraints.
+    
+    v1.6.2: Ghost Protocol Expansion - Zero-Knowledge Proofs
+    - Suporte a variáveis 'secret'
+    - Verificação sem revelação de valores
+    - Commitments criptográficos
     
     v1.5: Defesa em 4 Camadas (The Fortress):
     - Layer 0: Input Sanitizer (anti-injection) ⭐ NEW v1.5.1
@@ -31,6 +37,8 @@ class AethelJudge:
         self.sanitizer = AethelSanitizer()  # v1.5.1: Initialize Sanitizer
         self.conservation_checker = ConservationChecker()  # v1.3: Initialize Conservation Checker
         self.overflow_sentinel = OverflowSentinel()  # v1.4: Initialize Overflow Sentinel
+        self.zkp_engine = get_zkp_simulator()  # v1.6.2: Initialize ZKP Engine
+        self.secret_variables = set()  # v1.6.2: Track secret variables
         
         # v1.5.2: Configurar timeout do Z3
         self.solver.set("timeout", self.Z3_TIMEOUT_MS)

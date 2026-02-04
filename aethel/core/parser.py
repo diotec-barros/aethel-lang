@@ -25,21 +25,57 @@ class AethelParser:
         return intents
     
     def _get_params(self, node):
-        return [f"{p.children[0].value}:{p.children[1].value}" for p in node.children]
+        """
+        v1.6.2: Extrai parâmetros com suporte a 'secret' keyword
+        Retorna lista de dicts com: name, type, is_secret
+        """
+        params = []
+        for p in node.children:
+            # Verifica se tem 'secret' keyword
+            if len(p.children) == 3:  # secret NAME : NAME
+                is_secret = True
+                param_name = p.children[1].value
+                param_type = p.children[2].value
+            else:  # NAME : NAME
+                is_secret = False
+                param_name = p.children[0].value
+                param_type = p.children[1].value
+            
+            params.append({
+                "name": param_name,
+                "type": param_type,
+                "is_secret": is_secret
+            })
+        
+        return params
     
     def _get_block(self, node):
         """
         Extrai as condições lógicas.
         v1.2: Agora suporta expressões aritméticas!
+        v1.6.2: Agora suporta 'secret' keyword nas condições!
         """
         conditions = []
         for condition_node in node.children:
-            # condition_node tem: expr OPERATOR expr
-            left_expr = self._parse_expr(condition_node.children[0])
-            operator = condition_node.children[1].value
-            right_expr = self._parse_expr(condition_node.children[2])
+            # Verifica se tem 'secret' keyword
+            if len(condition_node.children) == 4:  # secret expr OPERATOR expr
+                is_secret = True
+                left_expr = self._parse_expr(condition_node.children[1])
+                operator = condition_node.children[2].value
+                right_expr = self._parse_expr(condition_node.children[3])
+            else:  # expr OPERATOR expr
+                is_secret = False
+                left_expr = self._parse_expr(condition_node.children[0])
+                operator = condition_node.children[1].value
+                right_expr = self._parse_expr(condition_node.children[2])
             
-            conditions.append(f"{left_expr} {operator} {right_expr}")
+            conditions.append({
+                "expression": f"{left_expr} {operator} {right_expr}",
+                "is_secret": is_secret,
+                "left": left_expr,
+                "operator": operator,
+                "right": right_expr
+            })
         
         return conditions
     

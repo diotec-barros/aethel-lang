@@ -1,18 +1,18 @@
-# Gramática Aethel v1.2 - "The Arithmetic Awakening"
-# Suporte a: operadores aritméticos, números literais, comentários
+# Gramática Aethel v1.6.2 - "Ghost Protocol Expansion"
+# Suporte a: operadores aritméticos, números literais, comentários, SECRET keyword
 aethel_grammar = """
     start: intent_def+
     
     intent_def: "intent" NAME "(" params ")" "{" guard_block solve_block verify_block "}"
     
     params: (param ("," param)*)?
-    param: NAME ":" NAME
+    param: ["secret"] NAME ":" NAME
     
     guard_block: "guard" "{" (condition ";")+ "}"
     solve_block: "solve" "{" (setting ";")+ "}"
     verify_block: "verify" "{" (condition ";")+ "}"
     
-    condition: expr OPERATOR expr
+    condition: ["secret"] expr OPERATOR expr
     setting: NAME ":" NAME
     
     ?expr: term

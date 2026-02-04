@@ -1,0 +1,36 @@
+# Aethel v1.6.2 - Private Transfer with Zero-Knowledge Proofs
+# ============================================================
+# 
+# This example demonstrates the Ghost Protocol:
+# - Balances are NEVER revealed
+# - Conservation is PROVED without disclosure
+# - Only commitments are shared
+#
+# Use Case: Private banking, confidential transactions
+
+intent private_transfer(sender: Account, receiver: Account, amount: Balance) {
+    guard {
+        # Secret: sender balance is never revealed!
+        secret sender_balance >= amount;
+        amount > 0;
+        
+        # Snapshot state (public)
+        old_sender_balance == sender_balance;
+        old_receiver_balance == receiver_balance;
+        old_total_supply == total_supply;
+    }
+    
+    solve {
+        priority: privacy;
+        target: private_ledger;
+    }
+    
+    verify {
+        # Secret: new balances never revealed!
+        secret sender_balance == old_sender_balance - amount;
+        secret receiver_balance == old_receiver_balance + amount;
+        
+        # Public: total supply conservation is proven
+        total_supply == old_total_supply;
+    }
+}
