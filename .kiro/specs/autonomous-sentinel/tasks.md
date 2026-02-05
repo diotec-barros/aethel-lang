@@ -146,48 +146,48 @@ Implementation follows a bottom-up approach: core telemetry and detection first,
     - **Property 19: Difficulty notification**
     - **Validates: Requirements 3.8**
 
-- [ ] 5. Quarantine System - Transaction Isolation
-  - [ ] 5.1 Implement QuarantineEntry and BatchSegmentation data structures
+- [x] 5. Quarantine System - Transaction Isolation
+  - [x] 5.1 Implement QuarantineEntry and BatchSegmentation data structures
     - Create dataclasses for quarantine tracking
     - Implement quarantine log storage (max 100 entries)
     - _Requirements: 4.7, 4.8_
 
-  - [ ] 5.2 Implement batch segmentation logic
+  - [x] 5.2 Implement batch segmentation logic
     - Implement segment_batch() to separate normal from suspicious transactions
     - Use anomaly scores from Sentinel Monitor for segmentation
     - _Requirements: 4.2_
 
-  - [ ] 5.3 Write property test for batch segregation
+  - [x] 5.3 Write property test for batch segregation
     - **Property 21: Batch segregation**
     - **Validates: Requirements 4.2**
 
-  - [ ] 5.3 Implement isolated execution using Parallel Executor
+  - [x] 5.3 Implement isolated execution using Parallel Executor
     - Implement process_quarantined() leveraging existing parallel_executor.py
     - Create separate execution contexts for normal and quarantine batches
     - _Requirements: 4.1, 4.2_
 
-  - [ ] 5.4 Write property tests for anomaly isolation and partial batch success
+  - [x] 5.4 Write property tests for anomaly isolation and partial batch success
     - **Property 20: Anomaly isolation**
     - **Property 22: Partial batch success**
     - **Validates: Requirements 4.1, 4.3**
 
-  - [ ] 5.5 Implement Merkle tree operations
+  - [x] 5.5 Implement Merkle tree operations
     - Implement merkle_amputate() to remove compromised branches
     - Implement reintegrate() to add cleared transactions back
     - Ensure Merkle tree validity after operations
     - _Requirements: 4.4, 4.5, 4.6_
 
-  - [ ] 5.6 Write property tests for Merkle operations
+  - [x] 5.6 Write property tests for Merkle operations
     - **Property 23: Merkle amputation correctness**
     - **Property 24: Quarantine reintegration**
     - **Validates: Requirements 4.4, 4.5, 4.6**
 
-  - [ ] 5.7 Implement quarantine logging and capacity management
+  - [x] 5.7 Implement quarantine logging and capacity management
     - Implement quarantine log with transaction IDs and reasons
     - Implement capacity check and rejection with retry-after header
     - _Requirements: 4.7, 4.8_
 
-  - [ ] 5.8 Write property test for quarantine logging
+  - [x] 5.8 Write property test for quarantine logging
     - **Property 25: Quarantine logging**
     - **Validates: Requirements 4.7**
 
