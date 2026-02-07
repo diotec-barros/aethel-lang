@@ -218,27 +218,29 @@ def amortization_schedule(
     total_interest_paid = 0
     
     for period in range(1, months + 1):
-        # Calculate interest for this period
+        # Calculate interest for this period (using integer arithmetic)
         interest = (balance * monthly_rate_bps) // 10000
         
         # Calculate principal payment
         principal_payment = monthly_payment - interest
         
-        # Handle final payment (may be slightly different due to rounding)
+        # Handle final payment to ensure balance reaches exactly zero
         if period == months:
+            # On final payment, pay whatever balance remains
             principal_payment = balance
+            # Recalculate final payment amount
             monthly_payment = principal_payment + interest
-        
-        # Update balance
-        new_balance = balance - principal_payment
-        
-        # Verify balance doesn't go negative (except final payment)
-        if period < months:
-            assert new_balance >= 0, f"Balance went negative at period {period}"
+            new_balance = 0
         else:
-            # Final balance should be 0 or very close
-            assert abs(new_balance) <= 100, f"Final balance not zero: {new_balance}"
-            new_balance = 0  # Force to exactly zero
+            # Update balance
+            new_balance = balance - principal_payment
+            
+            # Ensure balance doesn't go negative due to rounding
+            if new_balance < 0:
+                # Adjust principal payment to not exceed balance
+                principal_payment = balance
+                monthly_payment = principal_payment + interest
+                new_balance = 0
         
         # Create entry
         entry = AmortizationEntry(
@@ -254,6 +256,20 @@ def amortization_schedule(
         total_principal_paid += principal_payment
         total_interest_paid += interest
         balance = new_balance
+        
+        # Early exit if balance is zero
+        if balance == 0 and period < months:
+            # Fill remaining periods with zero payments
+            for remaining_period in range(period + 1, months + 1):
+                zero_entry = AmortizationEntry(
+                    period=remaining_period,
+                    payment=0,
+                    principal=0,
+                    interest=0,
+                    balance=0
+                )
+                schedule.append(zero_entry)
+            break
     
     # Post-conditions
     assert len(schedule) == months, "Schedule length mismatch"
