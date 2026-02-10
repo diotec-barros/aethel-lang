@@ -15,6 +15,7 @@ aethel_grammar = r"""
     verify_block: "verify" "{" (condition ";")+ "}"
     
     condition: ["secret"] ["external"] expr OPERATOR expr
+             | "(" expr OPERATOR expr ")" IMPLIES "(" expr OPERATOR expr ")"  -> implication
     setting: NAME ":" NAME
     
     ?expr: term
@@ -33,7 +34,8 @@ aethel_grammar = r"""
          | NUMBER
     
     OPERATOR: ">=" | "<=" | "==" | "!=" | ">" | "<"
-    NUMBER: /-?[0-9]+/
+    IMPLIES: "==>"
+    NUMBER: /-?[0-9]+(\.[0-9]+)?/
     NAME: /[a-zA-Z_][a-zA-Z0-9_]*/
     COMMENT: /#[^\n]*/
     

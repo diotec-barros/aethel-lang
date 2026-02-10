@@ -18,6 +18,7 @@ from aethel.core.parser import AethelParser
 from aethel.core.judge import AethelJudge
 from aethel.core.vault import AethelVault
 from aethel.core.state import AethelStateManager
+from aethel.core.persistence import get_persistence_layer
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -38,6 +39,7 @@ app.add_middleware(
 # Initialize Aethel components
 parser = AethelParser()
 vault = AethelVault()
+persistence = get_persistence_layer()  # v2.1.0: Persistence Layer
 # Judge will be initialized per-request with the parsed intent_map
 
 # Request/Response models
@@ -300,11 +302,14 @@ async def get_examples():
         collateral_amount > 0;
     }
     
+    solve {
+        priority: security;
+        target: defi_vault;
+    }
+    
     verify {
-        collateral_value == collateral_amount * btc_price;
-        if (debt > collateral_value * 0.75) {
-            liquidation_allowed == true;
-        }
+        collateral_value == (collateral_amount * btc_price);
+        (debt > (collateral_value * 0.75)) ==> (liquidation_allowed == true);
     }
 }"""
         },
@@ -321,10 +326,13 @@ async def get_examples():
         rainfall_mm >= 0;
     }
     
+    solve {
+        priority: security;
+        target: oracle_sanctuary;
+    }
+    
     verify {
-        if (rainfall_mm < threshold) {
-            farmer_balance == old_balance + payout;
-        }
+        (rainfall_mm < threshold) ==> (farmer_balance == (old_balance + payout));
     }
 }"""
         },
@@ -339,6 +347,11 @@ async def get_examples():
     guard {
         treatment_cost > 0;
         insurance_limit > 0;
+    }
+    
+    solve {
+        priority: privacy;
+        target: ghost_protocol;
     }
     
     verify {
@@ -677,6 +690,181 @@ async def oracle_stats():
             },
             "version": "1.7.0",
             "philosophy": "Zero trust, pure verification"
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "message": str(e)
+        }
+
+# Persistence endpoints (v2.1.0 - Sovereign Memory)
+@app.get("/api/persistence/stats")
+async def persistence_stats():
+    """
+    Get persistence layer statistics.
+    Returns execution stats, attack stats, and system state.
+    """
+    try:
+        stats = persistence.get_dashboard_stats()
+        
+        return {
+            "success": True,
+            **stats
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "message": str(e)
+        }
+
+@app.get("/api/persistence/integrity")
+async def check_integrity():
+    """
+    Check database integrity.
+    Verifies Merkle Root matches current state.
+    """
+    try:
+        is_valid = persistence.merkle_db.verify_integrity()
+        current_root = persistence.merkle_db.get_root()
+        
+        if not is_valid:
+            # CORRUPTION DETECTED!
+            return {
+                "success": False,
+                "is_valid": False,
+                "status": "CORRUPTED",
+                "merkle_root": current_root,
+                "message": "🚨 DATABASE CORRUPTION DETECTED - System in Panic Mode"
+            }
+        
+        return {
+            "success": True,
+            "is_valid": True,
+            "status": "VALID",
+            "merkle_root": current_root,
+            "message": "✅ Integrity verified - All systems operational"
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "is_valid": False,
+            "status": "ERROR",
+            "message": str(e)
+        }
+
+@app.get("/api/persistence/executions")
+async def recent_executions(limit: int = 100):
+    """
+    Get recent execution logs.
+    Returns list of recent proof attempts with status and timing.
+    """
+    try:
+        executions = persistence.auditor.get_recent_executions(limit=limit)
+        
+        return {
+            "success": True,
+            "executions": executions,
+            "count": len(executions)
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "message": str(e),
+            "executions": []
+        }
+
+@app.get("/api/persistence/attacks")
+async def recent_attacks(limit: int = 100):
+    """
+    Get recent attack logs.
+    Returns list of blocked attacks with severity and detection method.
+    """
+    try:
+        attacks = persistence.auditor.get_recent_attacks(limit=limit)
+        
+        return {
+            "success": True,
+            "attacks": attacks,
+            "count": len(attacks)
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "message": str(e),
+            "attacks": []
+        }
+
+@app.get("/api/persistence/bundles")
+async def list_bundles():
+    """
+    List all code bundles in content-addressable vault.
+    Returns bundles with content hashes and metadata.
+    """
+    try:
+        bundles = persistence.vault_db.list_bundles()
+        
+        return {
+            "success": True,
+            "bundles": bundles,
+            "count": len(bundles)
+        }
+        
+    except Exception as e:
+        return {
+            "success": False,
+            "message": str(e),
+            "bundles": []
+        }
+
+@app.get("/api/persistence/bundle/{content_hash}")
+async def get_bundle(content_hash: str):
+    """
+    Get specific bundle by content hash.
+    Returns bundle code and metadata.
+    """
+    try:
+        bundle = persistence.vault_db.fetch_bundle(content_hash)
+        
+        if not bundle:
+            raise HTTPException(status_code=404, detail="Bundle not found")
+        
+        # Verify integrity
+        is_valid = persistence.vault_db.verify_bundle(content_hash)
+        
+        return {
+            "success": True,
+            "bundle": bundle,
+            "integrity_verified": is_valid
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        return {
+            "success": False,
+            "message": str(e)
+        }
+
+@app.get("/api/persistence/merkle-root")
+async def get_merkle_root():
+    """
+    Get current Merkle Root.
+    Returns cryptographic fingerprint of entire system state.
+    """
+    try:
+        root = persistence.merkle_db.get_root()
+        total_accounts = len(persistence.merkle_db.state)
+        
+        return {
+            "success": True,
+            "merkle_root": root,
+            "total_accounts": total_accounts,
+            "message": "Current state fingerprint"
         }
         
     except Exception as e:

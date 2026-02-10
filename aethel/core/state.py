@@ -36,9 +36,9 @@ class MerkleStateTree:
         self.root_hash = None
         self.history = []  # List of (root_hash, timestamp, operation)
     
-    def _hash_account(self, balance: int, nonce: int) -> str:
-        """Generate hash for account state"""
-        data = f"{balance}:{nonce}"
+    def _hash_account(self, balance: int, nonce: int, public_key: str = "") -> str:
+        """Generate hash for account state (v2.2.0: includes public_key)"""
+        data = f"{balance}:{nonce}:{public_key}"
         return hashlib.sha256(data.encode()).hexdigest()
     
     def _calculate_root(self) -> str:
@@ -58,9 +58,14 @@ class MerkleStateTree:
         root = hashlib.sha256(combined.encode()).hexdigest()
         return root
     
-    def create_account(self, address: str, initial_balance: int = 0) -> str:
+    def create_account(self, address: str, initial_balance: int = 0, public_key: str = "") -> str:
         """
-        Create new account with initial balance.
+        Create new account with initial balance and public key (v2.2.0).
+        
+        Args:
+            address: Account address
+            initial_balance: Initial balance
+            public_key: ED25519 public key (hex) for signature verification
         
         Returns:
             Account hash
@@ -68,11 +73,12 @@ class MerkleStateTree:
         if address in self.accounts:
             raise ValueError(f"Account {address} already exists")
         
-        account_hash = self._hash_account(initial_balance, 0)
+        account_hash = self._hash_account(initial_balance, 0, public_key)
         
         self.accounts[address] = {
             'balance': initial_balance,
             'nonce': 0,
+            'public_key': public_key,  # v2.2.0: Store public key
             'hash': account_hash
         }
         
@@ -109,14 +115,16 @@ class MerkleStateTree:
         account = self.accounts[address]
         old_balance = account['balance']
         old_nonce = account['nonce']
+        public_key = account.get('public_key', '')  # v2.2.0: Preserve public key
         
         # Update account
         new_nonce = old_nonce + 1
-        new_hash = self._hash_account(new_balance, new_nonce)
+        new_hash = self._hash_account(new_balance, new_nonce, public_key)
         
         self.accounts[address] = {
             'balance': new_balance,
             'nonce': new_nonce,
+            'public_key': public_key,  # v2.2.0: Preserve public key
             'hash': new_hash
         }
         

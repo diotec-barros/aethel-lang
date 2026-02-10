@@ -67,6 +67,10 @@ class AethelParser:
                 # Build condition string from expression tree
                 condition_str = self._expr_to_string(c)
                 conditions.append(condition_str)
+            elif c.data == 'implication':
+                # Handle implication directly
+                condition_str = self._expr_to_string(c)
+                conditions.append(condition_str)
         return conditions
     
     def _expr_to_string(self, node):
@@ -79,6 +83,16 @@ class AethelParser:
             op = node.children[1].value
             right = self._expr_to_string(node.children[2])
             return f"{left} {op} {right}"
+        elif node.data == 'implication':
+            # implication: (expr OPERATOR expr) ==> (expr OPERATOR expr)
+            # children: [expr, OPERATOR, expr, expr, OPERATOR, expr]
+            left_expr = self._expr_to_string(node.children[0])
+            left_op = node.children[1].value
+            left_right = self._expr_to_string(node.children[2])
+            right_expr = self._expr_to_string(node.children[3])
+            right_op = node.children[4].value
+            right_right = self._expr_to_string(node.children[5])
+            return f"({left_expr} {left_op} {left_right}) ==> ({right_expr} {right_op} {right_right})"
         elif node.data in ['add', 'subtract', 'multiply', 'divide', 'modulo']:
             left = self._expr_to_string(node.children[0])
             right = self._expr_to_string(node.children[1])

@@ -1,0 +1,221 @@
+'use client';
+
+import { useState, useEffect, useRef } from 'react';
+import { Send, Sparkles, X } from 'lucide-react';
+
+interface Message {
+  role: 'user' | 'architect';
+  content: string;
+  timestamp: Date;
+  codeGenerated?: string;
+}
+
+interface ArchitectChatProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onCodeGenerated: (code: string) => void;
+}
+
+export default function ArchitectChat({ isOpen, onClose, onCodeGenerated }: ArchitectChatProps) {
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      role: 'architect',
+      content: 'Hello! I\'m the Aethel Architect. Describe what you want to build, and I\'ll generate the code for you.',
+      timestamp: new Date()
+    }
+  ]);
+  const [input, setInput] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        if (!isOpen) {
+          // Open chat (handled by parent)
+        }
+      }
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
+  const handleSend = async () => {
+    if (!input.trim() || isGenerating) return;
+
+    const userMessage: Message = {
+      role: 'user',
+      content: input,
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setInput('');
+    setIsGenerating(true);
+
+    try {
+      // TODO: Call actual API
+      // Simulate AI response
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      const generatedCode = `intent payment(
+    sender: Account,
+    receiver: Account,
+    amount: Balance
+) {
+    guard {
+        old_sender_balance >= amount;
+        amount > 0;
+    }
+    
+    solve {
+        priority: security;
+        target: defi_vault;
+    }
+    
+    verify {
+        fee == amount * 0.02;
+        sender_balance == old_sender_balance - amount - fee;
+        receiver_balance == old_receiver_balance + amount;
+        platform_balance == old_platform_balance + fee;
+    }
+}`;
+
+      const architectMessage: Message = {
+        role: 'architect',
+        content: 'I\'ve created a payment intent with a 2% fee. The fee is automatically calculated and sent to the platform balance. All balances are conserved.',
+        timestamp: new Date(),
+        codeGenerated: generatedCode
+      };
+
+      setMessages(prev => [...prev, architectMessage]);
+    } catch (error) {
+      console.error('Error generating code:', error);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleUseCode = (code: string) => {
+    onCodeGenerated(code);
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 bg-black/50 backdrop-blur-sm">
+      <div className="w-full max-w-3xl bg-gray-900 rounded-2xl shadow-2xl border border-gray-700 overflow-hidden animate-in slide-in-from-top duration-300">
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700 bg-gradient-to-r from-green-900/20 to-emerald-900/20">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-green-600 flex items-center justify-center">
+              <span className="text-xl">🤖</span>
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-white">Aethel Architect</h2>
+              <p className="text-sm text-gray-400">AI-Powered Code Generation</p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+          >
+            <X className="w-5 h-5 text-gray-400" />
+          </button>
+        </div>
+
+        {/* Messages */}
+        <div className="h-96 overflow-y-auto p-6 space-y-4">
+          {messages.map((message, index) => (
+            <div
+              key={index}
+              className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+            >
+              <div className={`
+                max-w-[80%] rounded-2xl px-4 py-3
+                ${message.role === 'user' 
+                  ? 'bg-blue-600 text-white' 
+                  : 'bg-gray-800 text-gray-100'
+                }
+              `}>
+                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                
+                {message.codeGenerated && (
+                  <div className="mt-3 pt-3 border-t border-gray-700">
+                    <pre className="text-xs bg-gray-900 p-3 rounded-lg overflow-x-auto">
+                      <code>{message.codeGenerated}</code>
+                    </pre>
+                    <button
+                      onClick={() => handleUseCode(message.codeGenerated!)}
+                      className="mt-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors flex items-center gap-2"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      Use This Code
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+          
+          {isGenerating && (
+            <div className="flex justify-start">
+              <div className="bg-gray-800 rounded-2xl px-4 py-3">
+                <div className="flex items-center gap-2">
+                  <div className="flex gap-1">
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <div className="w-2 h-2 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+                  <span className="text-sm text-gray-400">Generating code...</span>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Input */}
+        <div className="px-6 py-4 border-t border-gray-700 bg-gray-800/50">
+          <div className="flex items-center gap-3">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+              placeholder="Describe what you want to build..."
+              className="flex-1 bg-gray-900 text-white px-4 py-3 rounded-xl border border-gray-700 focus:border-green-500 focus:outline-none transition-colors"
+              disabled={isGenerating}
+            />
+            <button
+              onClick={handleSend}
+              disabled={!input.trim() || isGenerating}
+              className="px-6 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-xl transition-colors flex items-center gap-2"
+            >
+              <Send className="w-4 h-4" />
+              Send
+            </button>
+          </div>
+          <p className="text-xs text-gray-500 mt-2">
+            Press <kbd className="px-2 py-1 bg-gray-700 rounded">CMD+K</kbd> to open • <kbd className="px-2 py-1 bg-gray-700 rounded">ESC</kbd> to close
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}

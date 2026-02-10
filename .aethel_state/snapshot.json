@@ -1,57 +1,63 @@
 {
-  "root_hash": "1e994337bc48d0b2c293f9ac28b883ae68c0739e24307a32e28c625f19912642",
-  "accounts": {
-    "Alice": {
-      "balance": 99500,
-      "nonce": 2,
-      "hash": "e11d647302ccab28cac9aebe3fec9aa648e2737a81d32c28e5704dc20b4ffbc7"
+  "state": {
+    "account:alice": {
+      "balance": 1000,
+      "nonce": 0
     },
-    "Bob": {
-      "balance": 100500,
-      "nonce": 2,
-      "hash": "19425670b210203ed24fc6deaf3105d78805a437b37e3f6137622c01d03d7813"
+    "account:bob": {
+      "balance": 500,
+      "nonce": 0
     },
-    "Charlie": {
-      "balance": 100250,
-      "nonce": 2,
-      "hash": "8dd3057bf0e54bd3af4d7e9712c924cc60d112d32c34e73e23fd5a13c9028502"
+    "account:charlie": {
+      "balance": 250,
+      "nonce": 0
     },
-    "Diana": {
-      "balance": 100125,
-      "nonce": 2,
-      "hash": "7cbbcedb580e325157e2e203a86b08e7db7fc02cd3bfb2f130f1b6ac8e1a1a20"
+    "state_transition_1770728348": {
+      "root_before": "14f07ec6e660194e2f3f5919576971e82948e487a11ab41dfe3530cc1e441f77",
+      "root_after": "3a1d9f29f564f966df1940e542bbb297da4169d6a9c130a1398370f45ed96320",
+      "changes": [
+        {
+          "key": "balance:treasury",
+          "value": 9999
+        },
+        {
+          "key": "balance:node1",
+          "value": 1
+        }
+      ],
+      "timestamp": 0
     },
-    "Eve": {
-      "balance": 100025,
-      "nonce": 2,
-      "hash": "0ee356b99106a61db5a0f338920db3ac01c684ba8bcb2a972c42e1bac15c1345"
+    "state_transition_1770728364": {
+      "root_before": "14f07ec6e660194e2f3f5919576971e82948e487a11ab41dfe3530cc1e441f77",
+      "root_after": "3a1d9f29f564f966df1940e542bbb297da4169d6a9c130a1398370f45ed96320",
+      "changes": [
+        {
+          "key": "balance:treasury",
+          "value": 9999
+        },
+        {
+          "key": "balance:node1",
+          "value": 1
+        }
+      ],
+      "timestamp": 0
     },
-    "Frank": {
-      "balance": 99900,
-      "nonce": 2,
-      "hash": "aa7f5c5b40a76fe3ab9efa674a416d236bb8f49479de4bf3f87256ff7340f1c8"
-    },
-    "Grace": {
-      "balance": 100050,
-      "nonce": 2,
-      "hash": "4474835f3ad02f09b8053d7dcc7a27c2415984674e810db83fbc0ea921d167b5"
-    },
-    "Henry": {
-      "balance": 99850,
-      "nonce": 2,
-      "hash": "3e41614a8d140cef7bdb8ba43a7a73c228e3294917a5c34af24018dc4d531e21"
-    },
-    "Iris": {
-      "balance": 99900,
-      "nonce": 2,
-      "hash": "aa7f5c5b40a76fe3ab9efa674a416d236bb8f49479de4bf3f87256ff7340f1c8"
-    },
-    "Jack": {
-      "balance": 99900,
-      "nonce": 2,
-      "hash": "aa7f5c5b40a76fe3ab9efa674a416d236bb8f49479de4bf3f87256ff7340f1c8"
+    "state_transition_1770731639": {
+      "root_before": "14f07ec6e660194e2f3f5919576971e82948e487a11ab41dfe3530cc1e441f77",
+      "root_after": "3a1d9f29f564f966df1940e542bbb297da4169d6a9c130a1398370f45ed96320",
+      "changes": [
+        {
+          "key": "balance:treasury",
+          "value": 9999
+        },
+        {
+          "key": "balance:node1",
+          "value": 1
+        }
+      ],
+      "timestamp": 0
     }
   },
-  "total_supply": 1000000,
-  "timestamp": "2026-02-02T20:17:45.656827"
+  "merkle_root": "5df3daee3a0ca23c388a16c3db2c2388aea63f1c4ed5fa12377fe0fef6bf3ce5",
+  "timestamp": 1770731639.139157
 }

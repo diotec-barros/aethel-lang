@@ -7,7 +7,7 @@ You wanted to create a crop insurance contract with:
 - Conditional logic in `verify` block (`if` statements)
 
 ```aethel
-// ❌ NOT SUPPORTED IN v1.9.0
+// ❌ NOT SUPPORTED IN v1.9.0 (Missing solve block)
 intent process_crop_insurance(farmer: Account, external rainfall_mm: Measurement) {
     guard {
         rainfall_verified == true;
@@ -24,18 +24,16 @@ intent process_crop_insurance(farmer: Account, external rainfall_mm: Measurement
 
 **Error**: `Unexpected token 'verify' - Expected 'SOLVE'`
 
+**Why?** The `solve` block is **mandatory** in v1.9.0. It declares the execution environment.
+
 ---
 
 ## ✅ Working Solution (v1.9.0)
 
-The current Aethel syntax doesn't support:
-1. `external` keyword for oracle data
-2. `if` statements in `verify` blocks
-
-**Workaround**: Create separate intents for each condition:
+**IMPORTANT**: v1.9.0 requires the `solve` block to declare execution environment.
 
 ```aethel
-// ✅ WORKS IN v1.9.0
+// ✅ WORKS IN v1.9.0 - With solve block
 intent insurance_payout(
     farmer: Account,
     insurance_pool: Account,
@@ -57,6 +55,11 @@ intent insurance_payout(
         
         // Farmer has valid account
         old_farmer_balance >= 0;
+    }
+    
+    solve {
+        priority: security;
+        target: oracle_sanctuary;
     }
     
     verify {

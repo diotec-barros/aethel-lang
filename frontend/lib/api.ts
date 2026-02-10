@@ -45,17 +45,26 @@ export async function verifyCode(code: string): Promise<VerifyResponse> {
 
 export async function getExamples(): Promise<Example[]> {
   try {
-    const response = await fetch(`${API_URL}/api/examples`);
+    // Add cache-busting timestamp to force fresh data
+    const timestamp = new Date().getTime();
+    const response = await fetch(`${API_URL}/api/examples?_t=${timestamp}`, {
+      cache: 'no-store', // Disable caching
+      headers: {
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+      }
+    });
     
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const data = await response.json();
+    console.log('✅ Fetched examples from backend:', data.examples?.length || 0);
     // API returns { success: true, examples: [...], count: 3 }
     return data.examples || [];
   } catch (error) {
-    console.error('Failed to fetch examples:', error);
+    console.error('❌ Failed to fetch examples:', error);
     return [];
   }
 }

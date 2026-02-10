@@ -1,0 +1,10 @@
+{
+  "code": "\nintent transfer(sender, receiver, amount):\n    guard sender_balance >= amount\n    guard amount > 0\n    verify sender_balance_after == sender_balance - amount\n    verify receiver_balance_after == receiver_balance + amount\n",
+  "metadata": {
+    "intent_name": "transfer",
+    "verification_status": "PROVED",
+    "timestamp": 1770585433.0107942
+  },
+  "content_hash": "45fc28efeb6dde41aafc2ea4fa29b2137052811e6db2b4ddcfbc0d8576fd38a2",
+  "timestamp": 1770585433.0108764
+}

@@ -1,0 +1,10 @@
+{
+  "code": "\nintent withdraw(account, amount):\n    guard account_balance >= amount\n    guard amount > 0\n    verify account_balance_after == account_balance - amount\n",
+  "metadata": {
+    "intent_name": "withdraw",
+    "verification_status": "PROVED",
+    "timestamp": 1770585433.0130148
+  },
+  "content_hash": "d7ab837401eae1b6cf036b8004bfdcee3da6482722461f173b0412d93741f752",
+  "timestamp": 1770585433.0130665
+}
