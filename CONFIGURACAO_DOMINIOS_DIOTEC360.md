@@ -20,9 +20,9 @@
 - **Função:** Ponto de acesso público
 - **Status:** 🚀 Pronto para deploy
 
-#### Node 2 (diotec360.com - Principal)
-- **URL:** https://aethel.diotec360.com
-- **Servidor:** Seu servidor principal
+#### Node 2 (Railway API - Principal)
+- **URL:** https://api.diotec360.com
+- **Servidor:** Railway (7m1g5de7.up.railway.app)
 - **Função:** Backend primário
 - **Status:** 🚀 Pronto para deploy
 
@@ -46,8 +46,8 @@
 │                                                         │
 │  BACKEND TRIANGLE (HTTP-Only Resilience)                │
 │  ├─ Node 1: https://diotec-aethel-judge.hf.space      │
-│  ├─ Node 2: https://aethel.diotec360.com              │
-│  └─ Node 3: https://backup.diotec360.com              │
+│  ├─ Node 2: https://api.diotec360.com (Railway)       │
+│  └─ Node 3: https://backup.diotec360.com (Vercel)     │
 │                                                         │
 │  STATE SYNCHRONIZATION                                  │
 │  └─ Merkle Root: 5df3daee3a0ca23c...                   │
@@ -61,27 +61,27 @@
 
 ### Frontend (Vercel)
 ```env
-NEXT_PUBLIC_API_URL=https://aethel.diotec360.com
+NEXT_PUBLIC_API_URL=https://api.diotec360.com
 NEXT_PUBLIC_LATTICE_NODES=https://diotec-aethel-judge.hf.space,https://backup.diotec360.com
 ```
 
 ### Node 1 (Hugging Face)
 ```env
-AETHEL_LATTICE_NODES=https://aethel.diotec360.com,https://backup.diotec360.com
+AETHEL_LATTICE_NODES=https://api.diotec360.com,https://backup.diotec360.com
 AETHEL_NODE_NAME=node1-huggingface
 AETHEL_NODE_ROLE=genesis-public
 ```
 
-### Node 2 (diotec360.com Principal)
+### Node 2 (Railway API)
 ```env
 AETHEL_LATTICE_NODES=https://diotec-aethel-judge.hf.space,https://backup.diotec360.com
 AETHEL_NODE_NAME=node2-diotec360
 AETHEL_NODE_ROLE=genesis-primary
 ```
 
-### Node 3 (Backup)
+### Node 3 (Vercel Backup)
 ```env
-AETHEL_LATTICE_NODES=https://diotec-aethel-judge.hf.space,https://aethel.diotec360.com
+AETHEL_LATTICE_NODES=https://diotec-aethel-judge.hf.space,https://api.diotec360.com
 AETHEL_NODE_NAME=node3-backup
 AETHEL_NODE_ROLE=genesis-backup
 ```
@@ -110,44 +110,48 @@ curl https://diotec-aethel-judge.hf.space/health
 
 ---
 
-### 2. Deploy Node 2 (aethel.diotec360.com) - 5 min
+### 2. Deploy Node 2 (api.diotec360.com - Railway) - 5 min
 
-**Opção A: Se já está rodando em aethel.diotec360.com**
-```bash
-# SSH no servidor
-ssh user@aethel.diotec360.com
+**Node 2 já está deployed no Railway!**
 
-# Navegue para o diretório
-cd /var/www/aethel  # ou onde está instalado
-
-# Atualize o .env
-cp .env.node2.diotec360 .env
-
-# Reinicie o serviço
-sudo systemctl restart aethel
-# ou
-pm2 restart aethel
-```
-
-**Opção B: Deploy novo**
-```bash
-# Execute o script
-./deploy_node2_diotec360.sh
-```
+O DNS `api.diotec360.com` aponta para `7m1g5de7.up.railway.app`.
 
 **Teste:**
 ```bash
-curl https://aethel.diotec360.com/health
+curl https://api.diotec360.com/health
 ```
+
+**Se precisar atualizar variáveis de ambiente no Railway:**
+1. Acesse: https://railway.app/
+2. Selecione o projeto Aethel
+3. Vá em "Variables"
+4. Adicione/atualize:
+   - `AETHEL_LATTICE_NODES=https://diotec-aethel-judge.hf.space,https://backup.diotec360.com`
+   - `AETHEL_NODE_NAME=node2-diotec360`
+   - `AETHEL_NODE_ROLE=genesis-primary`
+   - `AETHEL_P2P_ENABLED=false`
+5. Railway fará redeploy automático
 
 ---
 
-### 3. Deploy Node 3 (backup.diotec360.com) - 5 min
+### 3. Deploy Node 3 (backup.diotec360.com - Vercel) - 5 min
 
+**Deploy no Vercel:**
 ```bash
-# Execute o script
-./deploy_node3_backup.sh
+# Execute o script de deployment
+deploy_node3_vercel.bat
+
+# Ou manualmente:
+cd [diretório do projeto]
+vercel --prod
 ```
+
+**Configure o domínio no Vercel:**
+1. Acesse: https://vercel.com/dashboard
+2. Selecione o projeto
+3. Vá em "Settings" → "Domains"
+4. Adicione: `backup.diotec360.com`
+5. Vercel fornecerá o CNAME (já configurado: `cname.vercel-dns.com`)
 
 **Teste:**
 ```bash
@@ -173,7 +177,7 @@ PHASE 1: HEALTH CHECKS
 [TEST] Node 1 (Hugging Face): https://diotec-aethel-judge.hf.space
   ✅ Status: healthy
 
-[TEST] Node 2 (diotec360): https://aethel.diotec360.com
+[TEST] Node 2 (Railway API): https://api.diotec360.com
   ✅ Status: healthy
 
 [TEST] Node 3 (Backup): https://backup.diotec360.com
@@ -309,11 +313,11 @@ sudo systemctl reload nginx
 curl https://diotec-aethel-judge.hf.space/health
 curl https://diotec-aethel-judge.hf.space/api/lattice/state
 
-# Node 2 (Principal)
-curl https://aethel.diotec360.com/health
-curl https://aethel.diotec360.com/api/lattice/state
+# Node 2 (Railway API)
+curl https://api.diotec360.com/health
+curl https://api.diotec360.com/api/lattice/state
 
-# Node 3 (Backup)
+# Node 3 (Vercel Backup)
 curl https://backup.diotec360.com/health
 curl https://backup.diotec360.com/api/lattice/state
 ```
@@ -323,7 +327,7 @@ curl https://backup.diotec360.com/api/lattice/state
 ```bash
 # Verificar Merkle Roots
 curl https://diotec-aethel-judge.hf.space/api/lattice/state | jq .merkle_root
-curl https://aethel.diotec360.com/api/lattice/state | jq .merkle_root
+curl https://api.diotec360.com/api/lattice/state | jq .merkle_root
 curl https://backup.diotec360.com/api/lattice/state | jq .merkle_root
 
 # Devem ser idênticos!
@@ -363,8 +367,8 @@ echo "[Node 1] Hugging Face"
 curl -s https://diotec-aethel-judge.hf.space/health | jq .status
 
 # Check Node 2
-echo "[Node 2] aethel.diotec360.com"
-curl -s https://aethel.diotec360.com/health | jq .status
+echo "[Node 2] api.diotec360.com"
+curl -s https://api.diotec360.com/health | jq .status
 
 # Check Node 3
 echo "[Node 3] backup.diotec360.com"
@@ -423,7 +427,7 @@ python verify_production_triangle.py
 
 # Verificação rápida
 curl https://diotec-aethel-judge.hf.space/health
-curl https://aethel.diotec360.com/health
+curl https://api.diotec360.com/health
 curl https://backup.diotec360.com/health
 
 # Monitoramento

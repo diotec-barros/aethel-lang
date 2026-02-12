@@ -12,7 +12,7 @@ from typing import Dict, List, Tuple
 # Production node URLs
 NODES = [
     ("Node 1 (Hugging Face)", "https://diotec-aethel-judge.hf.space"),
-    ("Node 2 (diotec360)", "https://aethel.diotec360.com"),
+    ("Node 2 (Railway API)", "https://api.diotec360.com"),
     ("Node 3 (Backup)", "https://backup.diotec360.com")
 ]
 
