@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Tooltip } from './Tooltip';
+import ExampleSelector from '@/components/ExampleSelector';
 
 interface Layer {
   id: string;
@@ -15,9 +16,21 @@ interface Layer {
 
 interface LayerSidebarProps {
   onLayerChange: (layerId: string) => void;
+  onExampleSelect: (code: string) => void;
+  onVerify: () => void;
+  isVerifying: boolean;
+  onChatToggle: () => void;
+  activeLayer: string;
 }
 
-export default function LayerSidebar({ onLayerChange }: LayerSidebarProps) {
+export default function LayerSidebar({ 
+  onLayerChange, 
+  onExampleSelect, 
+  onVerify, 
+  isVerifying, 
+  onChatToggle,
+  activeLayer 
+}: LayerSidebarProps) {
   const [layers, setLayers] = useState<Layer[]>([
     {
       id: 'judge',
@@ -70,8 +83,11 @@ export default function LayerSidebar({ onLayerChange }: LayerSidebarProps) {
     onLayerChange(layerId);
   };
 
+  const [examplesOpen, setExamplesOpen] = useState(false);
+
   return (
-    <div className="w-20 bg-gray-900 border-r border-gray-800 flex flex-col items-center py-6 space-y-4">
+    <div className={`bg-gray-900 border-r border-gray-800 flex py-6 overflow-hidden transition-[width] duration-200 ${examplesOpen ? 'w-96' : 'w-20'}`}>
+      <div className="w-20 flex flex-col items-center space-y-4">
       {/* Logo */}
       <div className="mb-4">
         <div className="text-2xl font-bold text-white">Æ</div>
@@ -119,15 +135,89 @@ export default function LayerSidebar({ onLayerChange }: LayerSidebarProps) {
         </Tooltip>
       ))}
 
+      {/* Divider */}
+      <div className="w-12 h-px bg-gray-700" />
+
+      {/* Examples Button */}
+      <Tooltip content="Examples">
+        <button
+          onClick={() => setExamplesOpen(!examplesOpen)}
+          className={`
+            relative w-14 h-14 rounded-xl flex items-center justify-center
+            transition-all duration-200 group
+            ${examplesOpen ? 'bg-gray-700' : 'bg-gray-800 hover:bg-gray-700 hover:scale-105'}
+          `}
+        >
+          <span className="text-2xl">📚</span>
+          {examplesOpen && (
+            <div className="absolute -left-1 top-1/2 -translate-y-1/2 w-1 h-8 bg-white rounded-r" />
+          )}
+        </button>
+      </Tooltip>
+
       {/* Spacer */}
       <div className="flex-1" />
 
-      {/* Settings */}
-      <Tooltip content="Settings">
-        <button className="w-14 h-14 rounded-xl bg-gray-800 hover:bg-gray-700 flex items-center justify-center transition-colors">
-          <span className="text-xl">⚙️</span>
+      {/* Action Buttons */}
+      <Tooltip content="AI Chat (CMD+K)">
+        <button 
+          onClick={onChatToggle}
+          className="w-14 h-14 rounded-xl bg-green-600 hover:bg-green-700 flex items-center justify-center transition-colors"
+        >
+          <span className="text-xl">🤖</span>
         </button>
       </Tooltip>
+
+      <Tooltip content={isVerifying ? "Verifying..." : "Verify Code"}>
+        <button 
+          onClick={onVerify}
+          disabled={isVerifying}
+          className={`w-14 h-14 rounded-xl flex items-center justify-center transition-colors ${
+            isVerifying 
+              ? 'bg-gray-700 cursor-not-allowed' 
+              : 'bg-blue-600 hover:bg-blue-700'
+          }`}
+        >
+          <span className="text-xl">{isVerifying ? '⏳' : '▶️'}</span>
+        </button>
+      </Tooltip>
+
+      <Tooltip content="GitHub">
+        <a
+          href="https://github.com/diotec-barros/aethel-lang"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-14 h-14 rounded-xl bg-gray-800 hover:bg-gray-700 flex items-center justify-center transition-colors"
+        >
+          <span className="text-xl">💻</span>
+        </a>
+      </Tooltip>
+
+      <Tooltip content="Documentation">
+        <a
+          href="https://github.com/diotec-barros/aethel-lang#readme"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-14 h-14 rounded-xl bg-gray-800 hover:bg-gray-700 flex items-center justify-center transition-colors"
+        >
+          <span className="text-xl">📖</span>
+        </a>
+      </Tooltip>
+      </div>
+
+      {examplesOpen && (
+        <div className="flex-1 pr-4 pl-3">
+          <div className="h-full flex flex-col">
+            <div className="px-1 pb-3">
+              <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Examples</div>
+              <div className="text-xs text-gray-500 mt-1">Select an example to load into the editor</div>
+            </div>
+            <div className="flex-1 overflow-auto">
+              <ExampleSelector onSelect={onExampleSelect} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -2,10 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
-import { Play, Github, BookOpen, Command } from 'lucide-react';
 import { verifyCode, type VerifyResponse } from '@/lib/api';
 import ProofViewer from '@/components/ProofViewer';
-import ExampleSelector from '@/components/ExampleSelector';
 import LayerSidebar from '@/components/LayerSidebar';
 import ArchitectChat from '@/components/ArchitectChat';
 import GhostVisualizer from '@/components/GhostVisualizer';
@@ -156,81 +154,17 @@ export default function Home() {
   return (
     <div className="flex h-screen bg-gray-950 text-white overflow-hidden">
       {/* Layer Sidebar */}
-      <LayerSidebar onLayerChange={setActiveLayer} />
+      <LayerSidebar 
+        onLayerChange={setActiveLayer} 
+        onExampleSelect={handleExampleSelect}
+        onVerify={handleVerify}
+        isVerifying={isVerifying}
+        onChatToggle={() => setChatOpen(!chatOpen)}
+        activeLayer={activeLayer}
+      />
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col h-screen overflow-hidden">
-        {/* Header */}
-        <header className="border-b border-gray-800 bg-gray-900">
-          <div className="flex items-center justify-between gap-4 px-6 py-4">
-            <div className="flex items-center gap-4 min-w-0">
-              <div className="flex flex-col leading-tight min-w-0">
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent truncate">
-                  Aethel Plataforma
-                </h1>
-                <span className="text-xs text-gray-400 truncate">
-                  Enterprise Verification Console
-                </span>
-              </div>
-              {/* Layer Indicator */}
-              <div className="flex items-center gap-2 px-3 py-1 bg-gray-800 rounded-lg">
-                <div className={`w-2 h-2 rounded-full ${
-                  activeLayer === 'judge' ? 'bg-blue-500' :
-                  activeLayer === 'architect' ? 'bg-green-500' :
-                  activeLayer === 'sentinel' ? 'bg-red-500' :
-                  activeLayer === 'ghost' ? 'bg-purple-500' :
-                  'bg-amber-500'
-                }`} />
-                <span className="text-xs font-semibold uppercase">{activeLayer}</span>
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-4 flex-wrap justify-end">
-              {/* Architect Chat Trigger */}
-              <button
-                onClick={() => setChatOpen(!chatOpen)}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
-                title="Open Architect (CMD+K)"
-              >
-                <Command className="w-4 h-4" />
-                <span className="text-sm font-semibold">AI Chat</span>
-              </button>
-
-              <div className="ml-1">
-                <ExampleSelector onSelect={handleExampleSelect} />
-              </div>
-              
-              <button
-                onClick={handleVerify}
-                disabled={isVerifying}
-                className="flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-700 disabled:cursor-not-allowed text-white rounded-lg transition-colors font-semibold"
-              >
-                <Play className="w-4 h-4" />
-                {isVerifying ? 'Verifying...' : 'Verify'}
-              </button>
-
-              <a
-                href="https://github.com/diotec-barros/aethel-lang"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
-                title="View on GitHub"
-              >
-                <Github className="w-5 h-5" />
-              </a>
-
-              <a
-                href="https://github.com/diotec-barros/aethel-lang#readme"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
-                title="Documentation"
-              >
-                <BookOpen className="w-5 h-5" />
-              </a>
-            </div>
-          </div>
-        </header>
 
         {/* Editor & Proof Viewer */}
         <div className="flex-1 flex overflow-hidden min-h-0">
